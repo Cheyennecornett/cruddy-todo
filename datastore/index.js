@@ -3,7 +3,7 @@ const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
 
-var items = {};
+//var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
