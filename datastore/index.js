@@ -7,10 +7,33 @@ var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
+// fs.writeFile(exports.counterFile, counterString, (err) => {
+//   if (err) {
+//     throw ('error writing counter');
+//   } else {
+//     callback(null, counterString);
+//   }
+// });
+
+
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  // debugger;
+  //var id =
+  counter.getNextUniqueId((err, id) => {
+    if (err) {
+      console.log('error');
+    } else { //in the npm tests error it was looking for info in our testData file. I changed the path and now all the tests are passing for create.
+      var fileName = './test/testData/' + id.toString() + '.txt';
+      fs.writeFile(fileName, text, (err) => {
+        if (err) {
+          throw ('error writing todo text file');
+        } else {
+          callback(null, {id, text });
+        }
+      });
+    }
+  });
+
 };
 
 exports.readAll = (callback) => {
