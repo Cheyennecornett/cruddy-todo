@@ -2,19 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
+// const readFilePromise = Promise.promisify(fs.readfile);
+const pfs = Promise.promisifyAll(fs);
 
 //var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
-
-// fs.writeFile(exports.counterFile, counterString, (err) => {
-//   if (err) {
-//     throw ('error writing counter');
-//   } else {
-//     callback(null, counterString);
-//   }
-// });
-
 
 exports.create = (text, callback) => {
   // debugger;
@@ -36,44 +30,57 @@ exports.create = (text, callback) => {
 
 };
 
-// exports.readAll = (callback) => {
-//   var data = [];
-//   fs.readdir('./test/testData/', (err, files) => {
-//     if (err) {
-//       console.log('read all error');
-//     } else {
-//       for (var i = 0; i < files.length; i++) {
+//return a new promise
+//readdir
+//output is an array of objs {id: id, text: text}
 
-//         data.push({ id: files[i].slice(0, 5), text: files[i].slice(0, 5) });
-//       }
-//       console.log(data);
-//       callback(null, data);
-//     }
-//   });
-// };
+//iterate through files in dir
+//read each file
+//create data obj
 
 exports.readAll = (callback) => {
-  var data = [];
-  fs.readdir('./test/testData/', (err, files) => {
-    if (err) {
-      console.log('read all error');
-    } else {
-      for (var i = 0; i < files.length; i++) {
-        var fileName = files[i];
-        fs.readFile('./test/testData/' + fileName, (err, fileData) => {
-          //console.log(fileName);
-          if (err) {
-            console.log('error');
-            callback(err, null);
-          } else {
-            data.push({ id: fileName.slice(0, 5), text: fileData.toString() });
-            console.log(data);
-          }
-        });
-      }
+  return pfs.readdirAsync(exports.dataDir).then((files) => {
+    var data = files.map(file => {
+      var id = file.slice(0, 5);
+      // var filePath = `${exports.dataDir}/${id}.txt`;
+      var filePath = path.join(exports.dataDir, file);
+      console.log('log:', filePath);
+      return pfs.readFileAsync(filePath).then((fileData) => {
+        console.log('id:', id, 'fileData:', fileData, 'fileData.toString:', fileData.toString());
+        // console.log('data:', data);
+        return {id: id, text: fileData.toString()};
+
+      });
+    });
+    //console.log(data);
+    //then take those and place them in the callback
+    Promise.all(data).then((data) => {
       callback(null, data);
-    }
+    });
+
   });
+  // var data = [];
+  // fs.readdir('./test/testData/', (err, files) => {
+  //   if (err) {
+  //     console.log('read all error');
+  //   } else {
+  //     for (var i = 0; i < files.length; i++) {
+  //       var fileName = files[i];
+  //       fs.readFile('./test/testData/' + fileName, (err, fileData) => {
+  //         //console.log(fileName);
+  //         if (err) {
+  //           console.log('error');
+  //           callback(err, null);
+  //         } else {
+  //           data.push({ id: fileName.slice(0, 5), text: fileData.toString() });
+  //           console.log(data);
+
+  //         }
+  //       });
+  //     }
+  //     callback(null, data);
+  //   }
+  // });
 };
 
 exports.readOne = (id, callback) => {
